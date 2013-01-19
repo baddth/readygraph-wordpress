@@ -26,6 +26,11 @@ function rg_register_mysettings() {
 }
 
 function rg_settings_page() {
+	if (get_option('rg_autopop') === false) {
+		$rg_autopop = '1';
+	} else {
+		$rg_autopop = get_option('rg_autopop');
+	}
 ?>
 	<div class="wrap">
 		<h2>ReadyGraph Setting</h2>
@@ -60,7 +65,7 @@ function rg_settings_page() {
 		    <table class="form-table" id="rg_advance_setting" style="display:none;">
 			  <tr valign="top">
 				   <th scope="row">Prompt user to connect to their social on their first visit</th>
-				   <td><input type="checkbox" name="rg_autopop" value="1" <?php checked( true, get_option('rg_autopop') ); ?> /></td>
+				   <td><input type="checkbox" name="rg_autopop" value="1" <?php checked( true, $rg_autopop ); ?> /></td>
 			  </tr>
 		    </table>
 		    <?php submit_button(); ?>
@@ -75,13 +80,18 @@ function rg_script_head() {
 	if ($app_id === false) {
 		return;
 	}
+	if (get_option('rg_autopop') === false) {
+		$rg_autopop = '1';
+	} else {
+		$rg_autopop = get_option('rg_autopop');
+	}
 ?>
 	<script type="text/javascript" src="//www.readygraph.com/scripts/readygraph.js"></script>
 	<script type="text/javascript">
 		ReadyGraph.setup({applicationId: '<?php echo $app_id; ?>', overrideFacebookSDK: true});
 		console.log('<?php echo get_the_title(); ?>');
 <?php
-	if (get_option('rg_autopop')) {
+	if (((int)$rg_autopop) == 1) {
 ?>
 		ReadyGraph.show(ReadyGraph.Plugins.ReadyInvite, {
 		  lazyShowing: true,
