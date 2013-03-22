@@ -2,7 +2,7 @@
 /*
 Plugin Name: ReadyGraph
 Plugin URI: http://www.readygraph.com/ 
-Version: 1.0
+Version: 1.1
 Author: ReadyGraph team
 Description: ReadyGraph is a simple friend invite tool that drives large number of traffic to your site
 Author URI: http://www.readygraph.com/
@@ -16,9 +16,9 @@ if (is_admin()) {
         'slug' => plugin_basename(__FILE__),
         'proper_folder_name' => 'readygraph',
         'api_url' => 'https://api.github.com/repos/baddth/readygraph-wordpress',
-        'raw_url' => 'https://raw.github.com/baddth/readygraph-wordpress/master',
+        'raw_url' => 'https://raw.github.com/baddth/readygraph-wordpress/staging',
         'github_url' => 'https://github.com/baddth/readygraph-wordpress',
-        'zip_url' => 'https://github.com/baddth/readygraph-wordpress/zipball/master',
+        'zip_url' => 'https://github.com/baddth/readygraph-wordpress/zipball/staging',
         'sslverify' => true,
         'requires' => '3.0',
         'tested' => '3.3',
