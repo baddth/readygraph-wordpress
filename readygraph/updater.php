@@ -70,6 +70,7 @@ class WP_GitHub_Updater {
 		$defaults = array(
 			'slug' => plugin_basename( __FILE__ ),
 			'proper_folder_name' => dirname( plugin_basename( __FILE__ ) ),
+			'source_folder_name' => '',
 			'sslverify' => true,
 			'access_token' => '',
 		);
@@ -217,23 +218,8 @@ class WP_GitHub_Updater {
 
 		if ( $this->overrule_transients() || ( !isset( $version ) || !$version || '' == $version ) ) {
 
-			$query = trailingslashit( $this->config['raw_url'] ) . basename( $this->config['slug'] );
-			$query = add_query_arg( array( 'access_token' => $this->config['access_token'] ), $query );
-
-			$raw_response = wp_remote_get( $query, array( 'sslverify' => $this->config['sslverify'] ) );
-
-			if ( is_wp_error( $raw_response ) )
-				$version = false;
-
-			preg_match( '#^\s*Version\:\s*(.*)$#im', $raw_response['body'], $matches );
-
-			if ( empty( $matches[1] ) )
-				$version = false;
-			else
-				$version = $matches[1];
-
 			// back compat for older readme version handling
-			$query = trailingslashit( $this->config['raw_url'] ) . $this->config['readme'];
+			$query = trailingslashit( $this->config['raw_url'] ) . trailingslashit( $this->config['source_folder_name'] ) . $this->config['readme'];
 			$query = add_query_arg( array( 'access_token' => $this->config['access_token'] ), $query );
 
 			$raw_response = wp_remote_get( $query, array( 'sslverify' => $this->config['sslverify'] ) );
@@ -410,7 +396,7 @@ class WP_GitHub_Updater {
 
 		// Move & Activate
 		$proper_destination = WP_PLUGIN_DIR.'/'.$this->config['proper_folder_name'];
-		$wp_filesystem->move( $result['destination'], $proper_destination );
+		$wp_filesystem->move( trailingslashit( $result['destination'] ) . $this->config['source_folder_name'], $proper_destination );
 		$result['destination'] = $proper_destination;
 		$activate = activate_plugin( WP_PLUGIN_DIR.'/'.$this->config['slug'] );
 
