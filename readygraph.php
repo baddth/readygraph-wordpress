@@ -14,8 +14,8 @@ include_once('updater.php');
 if (is_admin()) {
     $config = array(
         'slug' => plugin_basename(__FILE__),
-        'proper_folder_name' => 'readygraph-wordpress',
-	'source_folder_name' => 'readygraph-wordpress',
+        'proper_folder_name' => 'readygraph',
+	'source_folder_name' => '',
         'api_url' => 'https://api.github.com/repos/baddth/readygraph-wordpress',
         'raw_url' => 'https://raw.github.com/baddth/readygraph-wordpress/master',
         'github_url' => 'https://github.com/baddth/readygraph-wordpress',
