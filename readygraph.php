@@ -3,7 +3,7 @@
 /*
 Plugin Name: ReadyGraph
 Plugin URI: http://www.readygraph.com/ 
-Version: 1.0.4
+Version: 1.0.5
 Author: ReadyGraph team
 Description: ReadyGraph is a simple friend invite tool that drives large number of traffic to your site
 Author URI: http://www.readygraph.com/
@@ -54,7 +54,8 @@ class ReadyGraphSocialPlugins {
     }
     
     function rg_post_thumbnail_filter($content) {
-	return $this->replace_content ($content, $this->extract_description(the_content()));
+	$full_content = apply_filters('the_content', get_the_content());
+	return $this->replace_content ($content, $this->extract_description($full_content));
     }
     
     function rg_content_filter($content) {
