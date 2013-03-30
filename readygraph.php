@@ -1,12 +1,9 @@
 <?php
-include("widgets/like-button.php");
-
-add_action('widgets_init', create_function('', 'return register_widget("ReadyGraph_LikeButton");'));
 
 /*
 Plugin Name: ReadyGraph
 Plugin URI: http://www.readygraph.com/ 
-Version: 1.0.1
+Version: 1.0.2
 Author: ReadyGraph team
 Description: ReadyGraph is a simple friend invite tool that drives large number of traffic to your site
 Author URI: http://www.readygraph.com/
