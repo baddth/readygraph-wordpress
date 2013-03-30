@@ -1,8 +1,12 @@
 <?php
+include("widgets/like-button.php");
+
+add_action('widgets_init', create_function('', 'return register_widget("ReadyGraph_LikeButton");'));
+
 /*
 Plugin Name: ReadyGraph
 Plugin URI: http://www.readygraph.com/ 
-Version: 1.0
+Version: 1.0.1
 Author: ReadyGraph team
 Description: ReadyGraph is a simple friend invite tool that drives large number of traffic to your site
 Author URI: http://www.readygraph.com/
@@ -29,101 +33,100 @@ if (is_admin()) {
     new WP_GitHub_Updater($config);
 }
 
-// create custom plugin settings menu
-add_action('admin_menu', 'rg_create_menu');
-add_action('wp_head', 'rg_script_head');
-
-function rg_create_menu() {
-	//create new top-level menu
-	add_menu_page('ReadyGraph', 'ReadyGraph', 'administrator', __FILE__, 'rg_settings_page',plugins_url('/images/rg_logo_sml.png', __FILE__));
-	//call register settings function
-	add_action( 'admin_init', 'rg_register_mysettings' );
-}
-
-function rg_register_mysettings() {
-	//register our settings
-	register_setting( 'rg-settings-group', 'rg_application_id' );
-	register_setting( 'rg-settings-group', 'rg_autopop' );
-}
-
-function rg_settings_page() {
-	if (get_option('rg_autopop') === false) {
-		$rg_autopop = '1';
-	} else {
-		$rg_autopop = get_option('rg_autopop');
-	}
-?>
-	<div class="wrap">
-		<h2>ReadyGraph Setting</h2>
-
-		<form method="post" action="options.php">
-		    <?php settings_fields( 'rg-settings-group' ); ?>
-		    <?php
-			// do_settings( 'rg-settings-group' );
-		    ?>
-		    <table class="form-table">
-			  <tr valign="top">
-				   <td scope="row" colspan="2">
-					To learn more about ReadyGraph&trade;, please visit <a href="http://www.readygraph.com" target="_blank">http://www.readygraph.com</a>
-				   </td>
-			  </tr>
-		        <tr valign="top">
-			        <th scope="row">ReadyGraph&trade; Application ID</th>
-			        <td>
-					<input type="text" name="rg_application_id" value="<?php echo get_option('rg_application_id'); ?>" />
-				  </td>
-			  </tr>
-			  <tr valign="top">
-				   <td scope="row" colspan="2">
-					<hr/>
-				   </td>
-			  </tr>
-		        <tr valign="top">
-				  <th scope="row"><a href="#" onclick="document.getElementById('rg_advance_setting').style.display='block';return false">Show Advanced Setting</a></th>
-				  <td></td>
-		        </tr>
-		    </table>
-		    <table class="form-table" id="rg_advance_setting" style="display:none;">
-			  <tr valign="top">
-				   <th scope="row">Prompt user to connect to their social on their first visit</th>
-				   <td><input type="checkbox" name="rg_autopop" value="1" <?php checked( true, $rg_autopop ); ?> /></td>
-			  </tr>
-		    </table>
-		    <?php submit_button(); ?>
-		</form>
-	</div>
-</div>
-<?php
-}
-
-function rg_script_head() {
+class ReadyGraphSocialPlugins {
+    function ReadyGraphSocialPlugins() {
+	add_action('admin_menu', array(&$this, 'rg_create_menu'));
+	add_action('wp_head', array(&$this, 'rg_script_head'));
+	add_filter('the_content', array(&$this, 'rg_content_filter'), 10000);
+	add_filter('post_thumbnail_html', array(&$this, 'rg_content_filter'), 10000);
+    }
+    
+    function rg_script_head() {
 	$app_id = get_option('rg_application_id');
 	if ($app_id === false) {
-		return;
-	}
-	if (get_option('rg_autopop') === false) {
-		$rg_autopop = '1';
-	} else {
-		$rg_autopop = get_option('rg_autopop');
+	    return;
 	}
 ?>
 	<script type="text/javascript" src="//www.readygraph.com/scripts/readygraph.js"></script>
 	<script type="text/javascript">
-		ReadyGraph.setup({applicationId: '<?php echo $app_id; ?>', overrideFacebookSDK: true});
-		console.log('<?php echo get_the_title(); ?>');
-<?php
-	if (((int)$rg_autopop) == 1) {
-?>
-		ReadyGraph.show(ReadyGraph.Plugins.ReadyInvite, {
-		  lazyShowing: true,
-		  runOnlyOnce: true,
-		}, function(results) {
-		  /*callback*/
-		});
-<?php
-	}
-?>
+	    ReadyGraph.setup({applicationId: '<?php echo $app_id; ?>', overrideFacebookSDK: true});
+	    console.log('<?php echo get_the_title(); ?>');
 	</script>
 <?php
+    }
+    
+    function rg_content_filter($content) {
+	$description = strip_tags($content);
+	$description = substr($description, 0, 250);
+	
+	preg_match_all ( '/<img [^>]*>/ims',$content, $images );
+	foreach ( $images[0] as $image) {
+	    $class = preg_replace ('/.*class="([^"]*)/i', '\\1', $image);
+	    if ($class == $image) $class = '';
+	    
+	    $src = preg_replace ('/.*src="([^"]*)/i', '\\1', $image);
+	    if ($src == $image) $src = '';
+	    
+	    $rgw_data = 'rgw-data-title="'.htmlentities(get_the_title()).'" rgw-data-description="'.htmlentities($description).'" rgw-data-url="'.htmlentities(get_permalink()).'"';
+	    
+	    $replace = $image;
+	    if ($src != '') {
+		if ($class == '') {
+		    $replace = preg_replace ('/class="([^"]*)/i', $rgw_data.' class="\\1 rgw-picture-og', $replace);
+		}
+		else {
+		    $replace = preg_replace ('/src="([^"]*)/i', 'src="\\1" '.$rgw_data.' class="rgw-picture-og', $replace);
+		}
+	    }
+	    
+	    $content = str_replace ($image, $replace, $content);
+	}
+	return $content;
+    }
+    
+    function rg_create_menu() {
+	//create new top-level menu
+	add_menu_page('ReadyGraph', 'ReadyGraph', 'administrator', __FILE__, array(&$this, 'rg_settings_page'), plugins_url('/images/rg_logo_sml.png', __FILE__));
+	//call register settings function
+	add_action( 'admin_init', array(&$this, 'rg_register_mysettings'));
+    }
+    
+    function rg_register_mysettings() {
+	//register our settings
+	register_setting( 'rg-settings-group', 'rg_application_id' );
+    }
+    
+    function rg_settings_page() {
+?>
+	<div class="wrap">
+	    <h2>ReadyGraph Setting</h2>
+		<form method="post" action="options.php">
+		    <?php settings_fields( 'rg-settings-group' ); ?>
+		    <table class="form-table">
+			<tr valign="top">
+			    <td scope="row" colspan="2">
+				 To learn more about ReadyGraph&trade;, please visit <a href="http://www.readygraph.com" target="_blank">http://www.readygraph.com</a>
+			    </td>
+			</tr>
+			<tr valign="top">
+			    <th scope="row">ReadyGraph&trade; Application ID</th>
+			    <td>
+				 <input type="text" name="rg_application_id" value="<?php echo get_option('rg_application_id'); ?>" />
+			    </td>
+			</tr>
+			<tr valign="top">
+			    <td scope="row" colspan="2">
+				<hr/>
+			    </td>
+			</tr>
+		    </table>
+		    <?php submit_button(); ?>
+		</form>
+	    </div>
+	</div>
+<?php
+    }
 }
+
+add_action('init', create_function('', '$widget = new ReadyGraphSocialPlugins();'));
 ?>
