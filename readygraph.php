@@ -3,7 +3,7 @@
 /*
 Plugin Name: ReadyGraph
 Plugin URI: http://www.readygraph.com/ 
-Version: 1.0.2
+Version: 1.0.4
 Author: ReadyGraph team
 Description: ReadyGraph is a simple friend invite tool that drives large number of traffic to your site
 Author URI: http://www.readygraph.com/
@@ -35,7 +35,8 @@ class ReadyGraphSocialPlugins {
 	add_action('admin_menu', array(&$this, 'rg_create_menu'));
 	add_action('wp_head', array(&$this, 'rg_script_head'));
 	add_filter('the_content', array(&$this, 'rg_content_filter'), 10000);
-	add_filter('post_thumbnail_html', array(&$this, 'rg_content_filter'), 10000);
+	add_filter('post_thumbnail_html', array(&$this, 'rg_post_thumbnail_filter'), 10000);
+	#add_filter('post_gallery', array(&$this, 'rg_gallery_filter'), 10000);
     }
     
     function rg_script_head() {
@@ -52,14 +53,37 @@ class ReadyGraphSocialPlugins {
 <?php
     }
     
+    function rg_post_thumbnail_filter($content) {
+	return $this->replace_content ($content, $this->extract_description(the_content()));
+    }
+    
     function rg_content_filter($content) {
-	$description = strip_tags($content);
-	$description = substr($description, 0, 250);
+	return $this->replace_content ($content, $this->extract_description($content));
+    }
+    
+    function rg_gallery_filter($output) {
+	$description = $this->extract_description($output);
+	if (trim($description) == '') $description = $this->extract_description(the_content());
 	
+	return $this->replace_content ($output, $description);
+    }
+    
+    function extract_description($content) {
+	$content = preg_replace ('/<script.*?\/script>/is', '', $content);
+	$content = preg_replace ('/<style.*?\/style>/is', '', $content);
+	$description = strip_tags($content);
+	$description = substr(trim($description), 0, 250);
+	
+	return $description;
+    }
+    
+    function replace_content($content, $description) {
 	preg_match_all ( '/<img [^>]*>/ims',$content, $images );
 	foreach ( $images[0] as $image) {
 	    $class = preg_replace ('/.*class="([^"]*)/i', '\\1', $image);
 	    if ($class == $image) $class = '';
+	    
+	    if (strpos($class, 'rgw-picture-og') !== false) continue;
 	    
 	    $src = preg_replace ('/.*src="([^"]*)/i', '\\1', $image);
 	    if ($src == $image) $src = '';
